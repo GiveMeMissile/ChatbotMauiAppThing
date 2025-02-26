@@ -10,71 +10,65 @@ public partial class MainPage : ContentPage
 	bool generating = false;
 	dynamic aiManager;
 	string endGeneration = "<|EndGenerationNowUWU|>";
+    const int MAX_TOKENS = 512;
 
 
     private async Task GenerateResponce()
     {
         // Set up a new label to output the AI's response
         Label label = new Label();
-        label.Text = "";
+        label.Text = "AI: ";
+        label.TextColor = Color.FromRgb(0, 0, 255);
         AIUserChat.Add(label);
 
-        // Change the User's editor so they cannot input anything (:)
-        //UserInputEditor.IsReadOnly = true;
-        //UserInputEditor.Text = "";
-        //UserInputEditor.Placeholder = "Generating...";
-        await MainThread.InvokeOnMainThreadAsync(() => {
-            AIUserChat.Add(label);
-            UserInputEditor.IsReadOnly = true;
-            UserInputEditor.Text = "";
-            UserInputEditor.Placeholder = "Generating...";
-        });
+        // Change the User's editor so they cannot input anything (:
+        UserInputEditor.IsReadOnly = true;
+        UserInputEditor.Text = "";
+        UserInputEditor.Placeholder = "Generating...";
 
 
         string text;
+        int tokens = 0;
             
         while (generating)
         {
             using (Py.GIL())
             {
-                //text = (string)aiManager.forward(aiInput);
-                text = "UWU";
+                text = (string)aiManager.forward(aiInput);
                 Random random = new Random();
-                if (random.Next(1, 100) == 42)
-                {
-                    text = endGeneration;
-                }
             }
 
-            if (text == endGeneration)
+            if (text == endGeneration || tokens >+ MAX_TOKENS)
             {
-                await MainThread.InvokeOnMainThreadAsync(() => {
-                    UserInputEditor.IsReadOnly = false;
-                    UserInputEditor.Placeholder = "Ask the AI assistant anything you want!";
-                });
-                //UserInputEditor.IsReadOnly = false;
-                //UserInputEditor.Placeholder = "Ask the AI assistant anything you want!";
+                
+                UserInputEditor.IsReadOnly = false;
+                UserInputEditor.Placeholder = "Ask the AI assistant anything you want!";
                 break;
             }
-            await MainThread.InvokeOnMainThreadAsync(() => {
-                label.Text += text;
-            });
-            //label.Text += text;
+            label.Text += text;
             aiInput += text;
-                
-            await Task.Delay(10);
+            tokens++;
+            await Task.Delay(5);
+            
         }
+        generating = false;
     }
 
-    private void InputText(object sender, EventArgs e)
+    private async void InputText(object sender, EventArgs e)
     {
+        if (generating)
+        {
+            return;
+        }
         Label label = new Label();
         label.Text = "\nUser:\n" + UserInputEditor.Text;
-        aiInput += label.Text;
+        aiInput += label.Text + "\nAssistant\n";
         AIUserChat.Add(label);
+        generating = true;
 
-        Task.Run(async () => await GenerateResponce());
+        await GenerateResponce();
     }
+
 
     public MainPage()
     {
