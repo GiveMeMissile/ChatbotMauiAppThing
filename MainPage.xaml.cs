@@ -48,10 +48,21 @@ public partial class MainPage : ContentPage
             label.Text += text;
             aiInput += text;
             tokens++;
-            await Task.Delay(5);
-            
+            await Task.Delay(1);
         }
         generating = false;
+    }
+
+    private void InputChange(object sender, TextChangedEventArgs e)
+    {
+        string oldText = e.OldTextValue;
+        string newText = e.NewTextValue;
+        string myText = UserInputEditor.Text;
+    }
+
+    private void InputComplete(object sender, EventArgs e)
+    {
+        string text = ((Editor)sender).Text;
     }
 
     private async void InputText(object sender, EventArgs e)
