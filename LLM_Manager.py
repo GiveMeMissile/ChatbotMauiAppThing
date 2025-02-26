@@ -5,7 +5,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 TOKENIZER = "Qwen/Qwen2.5-1.5B-Instruct"
 MODEL = "Qwen/Qwen2.5-1.5B-Instruct"
 MAX_TOKENS = 512
-CONTEXT = "An AI assistant is assisting a user. The AI model is Qwen2.5 1.5b. The user is the user of an app called 'The AI helpline'. It is a very good app. The conversation between the AI and User is seen below."
+CONTEXT = "An AI assistant is assisting a user. The AI model is Qwen2.5 1.5b. The user is the user of an app called 'The AI helpline'. It is a very good app. The AI Assistant will not repeat itself at all. And the AI will decide when it ends its generation by outputting the EoS token. The conversation between the AI and User is seen below."
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
