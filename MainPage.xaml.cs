@@ -1,4 +1,4 @@
-﻿using Python.Runtime;
+using Python.Runtime;
 using System.Threading.Tasks;
 using Microsoft.Maui.ApplicationModel;
 
@@ -12,6 +12,40 @@ public partial class MainPage : ContentPage
 	string endGeneration = "<|EndGenerationNowUWU|>";
     const int MAX_TOKENS = 512;
 
+    private async Task ManageEditorWhileGenerate()
+    {
+        UserInputEditor.IsReadOnly = true;
+        UserInputEditor.Text = "";
+        UserInputEditor.Placeholder = "Generating...";
+
+        int dot = -1;
+
+        while(generating)
+        {
+            switch (dot)
+            {
+                case 1:
+                    UserInputEditor.Placeholder = "Generating.";
+                    dot = 2;
+                    break;
+                case 2:
+                    UserInputEditor.Placeholder = "Generating..";
+                    dot = 3;
+                    break;
+                case 3:
+                    UserInputEditor.Placeholder = "Generating...";
+                    dot = -1;
+                    break;
+                default:
+                    UserInputEditor.Placeholder = "Generating";
+                    dot=1;
+                    break;
+            }
+            await Task.Delay(500);
+        }
+        UserInputEditor.IsReadOnly = false;
+        UserInputEditor.Placeholder = "Ask the AI assistant anything you want!";
+    }
 
     private async Task GenerateResponce()
     {
@@ -40,9 +74,7 @@ public partial class MainPage : ContentPage
 
             if (text == endGeneration || tokens >+ MAX_TOKENS)
             {
-                
-                UserInputEditor.IsReadOnly = false;
-                UserInputEditor.Placeholder = "Ask the AI assistant anything you want!";
+                generating = false;
                 break;
             }
             label.Text += text;
@@ -50,7 +82,6 @@ public partial class MainPage : ContentPage
             tokens++;
             await Task.Delay(1);
         }
-        generating = false;
     }
 
     private void InputChange(object sender, TextChangedEventArgs e)
@@ -67,7 +98,7 @@ public partial class MainPage : ContentPage
 
     private async void InputText(object sender, EventArgs e)
     {
-        if (generating)
+        if (generating || UserInputEditor.Text == "")
         {
             return;
         }
@@ -76,8 +107,10 @@ public partial class MainPage : ContentPage
         aiInput += label.Text + "\nAssistant\n";
         AIUserChat.Add(label);
         generating = true;
-
-        await GenerateResponce();
+        Task manageTask = ManageEditorWhileGenerate();
+        Task generateTask = GenerateResponce();
+        await manageTask;
+        await generateTask;
     }
 
 
@@ -94,7 +127,6 @@ public partial class MainPage : ContentPage
             aiManager = Py.Import("LLM_Manager");
 			aiManager = aiManager.LLMManager();
         }
-        
-        // Task.Run(async () => await GenerateResponce());
+
     }
 }
